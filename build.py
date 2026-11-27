@@ -50,7 +50,8 @@ index = HEAD + src + TAIL
 (DOCS / "index.html").write_text(index, encoding="utf8")
 
 FILES = ["./", "index.html", "manifest.webmanifest", "pirata-one.woff2", "icon-180.png", "icon-512.png"]
-version = hashlib.sha256(index.encode("utf8")).hexdigest()[:12]
+# La version change aussi quand une icône change, pour que les appareils rechargent le cache.
+version = hashlib.sha256(index.encode("utf8") + b"".join((DOCS / f).read_bytes() for f in ("icon-180.png", "icon-512.png"))).hexdigest()[:12]
 SW = """// Généré par build.py : ne pas modifier à la main.
 const CACHE = 'skull-king-scores-%s';
 const FILES = %s;

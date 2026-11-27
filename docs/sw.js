@@ -1,5 +1,5 @@
 // Généré par build.py : ne pas modifier à la main.
-const CACHE = 'skull-king-scores-6dbb5488b9e3';
+const CACHE = 'skull-king-scores-5dd71fc42d3f';
 const FILES = ["./", "index.html", "manifest.webmanifest", "pirata-one.woff2", "icon-180.png", "icon-512.png"];
 
 self.addEventListener('install', e => {
