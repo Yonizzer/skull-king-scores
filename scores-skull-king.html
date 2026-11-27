@@ -569,8 +569,10 @@ function viewRound() {
   const tot = totals();
   const field = S.phase;
   const what = field === 'bid' ? 'pari' : 'plis gagnés';
+  const taken = row.reduce((a, c) => a + (c.tr || 0), 0);
   const rows = row.map((c, p) => {
     const sc = scoreCell(n, c), v = c[field], bp = bonusPts(c), nm = esc(pname(p));
+    const max = field === 'tr' ? n - (taken - (c.tr || 0)) : n;
     const sub = field === 'tr'
       ? `Pari ${c.bid == null ? '?' : c.bid}${sc != null ? ` · <b class="${cls(sc)}">${signed(sc)}</b>` : ''}`
       : (sc != null ? `<b class="${cls(sc)}">${signed(sc)}</b>` : '');
@@ -584,7 +586,7 @@ function viewRound() {
       <span class="step big">
         <button data-act="pstep" data-p="${p}" data-d="-1" ${v != null && v <= 0 ? 'disabled' : ''} aria-label="Moins : ${what} de ${nm}">−</button>
         <button class="v num" data-act="pclear" data-p="${p}" aria-label="${what} de ${nm} : ${v == null ? 'non saisi' : v}. Toucher pour effacer.">${v == null ? '·' : v}</button>
-        <button data-act="pstep" data-p="${p}" data-d="1" ${v != null && v >= n ? 'disabled' : ''} aria-label="Plus : ${what} de ${nm}">+</button>
+        <button data-act="pstep" data-p="${p}" data-d="1" ${v != null && v >= max ? 'disabled' : ''} aria-label="Plus : ${what} de ${nm}">+</button>
       </span>
       <span class="p-total num">${tot[p]}</span>
     </section>`;
@@ -726,6 +728,7 @@ app.addEventListener('click', e => {
     const c = Math.max(1, Math.min(MAX_CARDS, S.cards[S.cur] + +d.d));
     S.cards[S.cur] = c;
     for (const x of S.data[S.cur]) { if (x.bid > c) x.bid = null; if (x.tr > c) x.tr = null; }
+    if (S.data[S.cur].reduce((a, x) => a + (x.tr || 0), 0) > c) for (const x of S.data[S.cur]) x.tr = null;
   }
   else if (act === 'start') {
     S.data = emptyData(S.names.length);
@@ -739,8 +742,11 @@ app.addEventListener('click', e => {
   }
   else if (act === 'phase') { S.phase = d.v; openBonus = -1; scrollTop = true; }
   else if (act === 'pstep') {
-    const c = S.data[S.cur][+d.p], v = c[S.phase];
-    c[S.phase] = v == null ? 0 : Math.max(0, Math.min(S.cards[S.cur], v + +d.d));
+    const row = S.data[S.cur], c = row[+d.p], v = c[S.phase];
+    // Plis gagnés : le total de la table ne peut pas dépasser le nombre de cartes de la manche.
+    const others = S.phase === 'tr' ? row.reduce((a, x) => a + (x === c ? 0 : x.tr || 0), 0) : 0;
+    const max = Math.max(0, S.cards[S.cur] - others);
+    c[S.phase] = v == null ? 0 : Math.max(0, Math.min(max, v + +d.d));
   }
   else if (act === 'pclear') { S.data[S.cur][+d.p][S.phase] = null; }
   else if (act === 'pick') {
