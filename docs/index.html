@@ -9,8 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Skull King">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#E7EEEF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0B161C" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EAD9B5">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
@@ -21,34 +20,24 @@ body{margin:0;padding:0}
 </style>
 </head>
 <body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Pirata+One&display=swap">
 <style>
-/* Layout : une colonne pensée pour le téléphone, en-tête collant (manche + phase), une carte par joueur. */
+/* Parchemin : carte au trésor. Fond parchemin, encre brune, cire rouge ; lignes en pointillés plutôt que des cadres. */
 :root {
-  --bg: #E7EEEF;
-  --surface: #F8FAFA;
-  --ink: #10222C;
-  --muted: #55676F;
-  --line: #C6D2D5;
-  --accent: #0E6B75;
-  --accent-ink: #FFFFFF;
-  --accent-soft: #D3E6E8;
-  --gold: #946712;
-  --good: #1C7548;
-  --bad: #B0372F;
+  color-scheme: light;
+  --bg: #EAD9B5;
+  --surface: #F3E6C8;
+  --ink: #33200F;
+  --muted: #5E4423;
+  --line: #A88B5A;
+  --accent: #9B2C1F;
+  --accent-ink: #FFF6E3;
+  --accent-soft: #DEC896;
+  --gold: #7A4E0B;
+  --good: #1F5E36;
+  --bad: #9B2C1F;
   --display: "Pirata One", "Copperplate", "Georgia", serif;
-  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0B161C; --surface: #13232B; --ink: #E6EEF0; --muted: #8DA1A9; --line: #263A43;
-    --accent: #41B4BE; --accent-ink: #06222A; --accent-soft: #173640;
-    --gold: #E0B25A; --good: #5CCB94; --bad: #F0847A; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0B161C; --surface: #13232B; --ink: #E6EEF0; --muted: #8DA1A9; --line: #263A43;
-  --accent: #41B4BE; --accent-ink: #06222A; --accent-soft: #173640;
-  --gold: #E0B25A; --good: #5CCB94; --bad: #F0847A; color-scheme: dark;
+  --body: "Alegreya Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -256,6 +245,95 @@ button { -webkit-user-select: none; user-select: none; }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sheet-head h2 { font-size: 26px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sheet .bonus { border-top: 0; padding-top: 0; }
+
+/* ----- Habillage Parchemin ----- */
+body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 120' fill='none' stroke-linecap='round'%3E%3Cpath d='M-10 90c50-50 90 20 140-20s80-50 120-10 70 30 150-30' stroke='%238A6A3B' stroke-opacity='.3' stroke-width='2' stroke-dasharray='2 10'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center bottom 104px; background-size: min(100%, 900px) auto;
+  font-size: 17px;
+}
+.top { border-bottom: 0; }
+.top-line h1 { font-size: 38px; line-height: .95; }
+.setup h1 { font-size: 44px; }
+.cards { font-size: 14px; font-weight: 500; }
+.s-step { color: var(--accent); }
+.seat { color: var(--accent); }
+.name-row input { border: 2px solid var(--ink); border-radius: 12px; font-weight: 700; }
+.name-row input::placeholder { color: var(--muted); font-weight: 500; }
+
+.btn { border: 2px solid var(--ink); border-radius: 27px; background: transparent; font-weight: 800; font-size: 18px; min-height: 52px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); letter-spacing: .03em; }
+.btn.danger { border-color: var(--bad); color: var(--bad); }
+.btn.ghost { border-style: dashed; border-color: var(--line); color: var(--muted); }
+
+.icon-btn { border: 2px solid var(--ink); border-radius: 50%; background: transparent; }
+.icon-btn.nav { border: 0; border-radius: 8px; }
+.icon-btn[aria-pressed="true"], .menu-btn[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.name-row .icon-btn { border-color: var(--line); color: var(--muted); height: 44px; }
+
+.seg { display: flex; gap: 22px; padding: 0; background: none; border-radius: 0; border-bottom: 2px solid var(--ink); }
+.seg button { height: 40px; padding: 0 2px; border-radius: 0; font-size: 17px; font-weight: 500; color: var(--muted); border-bottom: 4px solid transparent; margin-bottom: -2px; }
+.seg button[aria-pressed="true"] { background: none; color: var(--ink); font-weight: 800; border-bottom-color: var(--accent); }
+
+.players { gap: 0; }
+.prow { background: transparent; border: 0; border-bottom: 2px dashed var(--line); border-radius: 0; padding: 6px 0; min-height: 64px; }
+.p-name { font-size: 19px; font-weight: 800; }
+.p-sub { font-size: 14px; font-weight: 500; }
+.p-total { font-size: 30px; min-width: 54px; }
+.step button { border: 2px solid var(--ink); border-radius: 50%; background: var(--surface); font-weight: 700; }
+.step.big button { border-radius: 50%; font-size: 24px; line-height: 1; }
+.step.big .v { font-family: var(--display); font-size: 30px; font-weight: 400; background: transparent; }
+.bonus-btn { border: 2px solid var(--line); font-size: 14px; font-weight: 800; }
+.bonus-btn.has { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.foot p { font-size: 15px; font-weight: 500; }
+
+.plan-list { border: 2px dashed var(--line); border-radius: 12px; }
+.preset { border: 2px solid var(--line); border-radius: 12px; }
+.preset[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.preset[aria-pressed="true"] small { color: var(--surface); }
+.rcell { border: 2px solid var(--line); }
+.rcell b { font-family: var(--display); font-weight: 400; font-size: 24px; }
+.menu { border: 2px solid var(--ink); border-radius: 16px; }
+.sheet { border: 2px solid var(--ink); border-bottom: 0; }
+.b-pts { color: var(--accent); }
+
+.rank { gap: 0; }
+.rank-row { background: transparent; border: 0; border-bottom: 2px dashed var(--line); border-radius: 0; padding: 10px 0; }
+.rank-row .nm { font-weight: 800; font-size: 19px; }
+.rank-row.lead .pos-n { color: var(--accent); }
+.table-wrap { border: 2px solid var(--line); border-radius: 12px; }
+th, td { border-bottom: 1px dashed var(--line); }
+tfoot td { border-top: 2px solid var(--ink); }
+.rules { border-top: 2px dashed var(--line); }
+
+/* iPad : une seule colonne de grandes lignes, lisibles de loin sur la table */
+@media (min-width: 700px) {
+  .screen, .setup { gap: 16px; padding-top: 20px; }
+  .top-line h1 { font-size: 58px; }
+  .setup h1 { font-size: 58px; }
+  .cards { font-size: 19px; }
+  .seg { gap: 36px; }
+  .seg button { height: 50px; font-size: 22px; }
+  .players { grid-template-columns: 1fr; }
+  .prow { min-height: 92px; gap: 16px; padding: 10px 0; }
+  .p-name { font-size: 30px; }
+  .p-sub { font-size: 19px; }
+  .step.big button { width: 62px; height: 62px; font-size: 34px; }
+  .step.big .v { width: 60px; font-size: 46px; }
+  .p-total { font-size: 46px; min-width: 96px; }
+  .bonus-btn { width: 58px; height: 58px; font-size: 19px; }
+  .icon-btn { width: 56px; height: 56px; }
+  .icon-btn.nav { width: 52px; }
+  .foot p { font-size: 20px; }
+  .btn { min-height: 64px; font-size: 22px; border-radius: 33px; }
+  .rank-row .nm { font-size: 26px; }
+  .rank-row .tt, .rank-row .pos-n { font-size: 40px; }
+  .rank-row .pos-n { width: 44px; }
+}
+@media (min-width: 1000px) and (max-height: 900px) {
+  .players { grid-template-columns: 1fr 1fr; column-gap: 40px; }
+  .prow { min-height: 76px; }
+}
 </style>
 
 <div id="app"></div>

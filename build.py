@@ -13,8 +13,8 @@ src = (ROOT / "scores-skull-king.html").read_text(encoding="utf8")
 # La page source est écrite pour claude.ai (qui ajoute l'en-tête HTML) : on retire ce qui lui est propre.
 src = src.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")
 src = re.sub(r"<title>.*?</title>\n", "", src, count=1)
-src = re.sub(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com[^>]*>\n', "", src)
-assert "fonts.googleapis.com" not in src and "<title>" not in src
+# Le lien Google Fonts reste : il sert la police du texte quand il y a du réseau ; hors ligne, la police système prend le relais.
+assert "<title>" not in src
 
 HEAD = """<!doctype html>
 <html lang="fr">
@@ -27,8 +27,7 @@ HEAD = """<!doctype html>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Skull King">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#E7EEEF" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0B161C" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EAD9B5">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
@@ -81,7 +80,7 @@ self.addEventListener('fetch', e => {
 MANIFEST = {
     "name": "Scores Skull King", "short_name": "Skull King", "lang": "fr",
     "start_url": "./", "scope": "./", "display": "standalone",
-    "background_color": "#E7EEEF", "theme_color": "#10222C",
+    "background_color": "#EAD9B5", "theme_color": "#EAD9B5",
     "icons": [
         {"src": "icon-180.png", "sizes": "180x180", "type": "image/png"},
         {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
