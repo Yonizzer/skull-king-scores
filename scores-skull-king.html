@@ -1,0 +1,710 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Scores Skull King</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Pirata+One&display=swap">
+<style>
+/* Layout : une colonne pensée pour le téléphone, en-tête collant (manche + phase), une carte par joueur. */
+:root {
+  --bg: #E7EEEF;
+  --surface: #F8FAFA;
+  --ink: #10222C;
+  --muted: #55676F;
+  --line: #C6D2D5;
+  --accent: #0E6B75;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #D3E6E8;
+  --gold: #946712;
+  --good: #1C7548;
+  --bad: #B0372F;
+  --display: "Pirata One", "Copperplate", "Georgia", serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B161C; --surface: #13232B; --ink: #E6EEF0; --muted: #8DA1A9; --line: #263A43;
+    --accent: #41B4BE; --accent-ink: #06222A; --accent-soft: #173640;
+    --gold: #E0B25A; --good: #5CCB94; --bad: #F0847A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B161C; --surface: #13232B; --ink: #E6EEF0; --muted: #8DA1A9; --line: #263A43;
+  --accent: #41B4BE; --accent-ink: #06222A; --accent-soft: #173640;
+  --gold: #E0B25A; --good: #5CCB94; --bad: #F0847A; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 32px;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg);
+}
+#app { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h1, h2 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+
+/* Boutons */
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 10px;
+  padding: 12px 16px; font-weight: 600; min-height: 48px;
+}
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--bad); }
+.btn.block { width: 100%; }
+.btn.ghost { background: transparent; }
+
+/* Écran de départ */
+.setup { padding-top: 16px; display: flex; flex-direction: column; gap: 12px; min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px); }
+.setup h1 { font-size: 40px; line-height: 1; }
+.s-head { display: flex; flex-direction: column; gap: 4px; }
+.s-step { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.foot { margin-top: auto; position: sticky; bottom: 0; background: var(--bg); padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; }
+.foot.two { grid-template-columns: 1fr 2fr; }
+.rgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rcell { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; }
+.rcell small { font-size: 11px; color: var(--muted); line-height: 1; }
+.rcell b { font-size: 19px; line-height: 1; }
+.rcell[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.rcell[aria-pressed="true"] small { color: var(--accent-ink); }
+.setup .sub { color: var(--muted); margin: 6px 0 0; }
+.names { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+.name-row { display: flex; gap: 8px; align-items: center; }
+.name-row .seat { width: 24px; text-align: center; font-family: var(--display); font-size: 22px; color: var(--gold); }
+.name-row input {
+  flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-height: 48px;
+}
+.icon-btn {
+  width: 44px; height: 48px; border: 1px solid var(--line); background: transparent;
+  border-radius: 10px; font-size: 20px; line-height: 1; color: var(--muted);
+}
+
+/* En-tête de partie */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); padding-block: 12px 10px;
+  display: flex; flex-direction: column; gap: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.top-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: relative; }
+.title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.top-line h1 { font-size: 34px; line-height: 1; }
+.top-line .cards { color: var(--muted); font-size: 14px; }
+.tabs { display: flex; gap: 6px; align-items: center; }
+.tab {
+  border: 1px solid var(--line); background: transparent; padding: 8px 12px; border-radius: 10px;
+  font-weight: 600; color: var(--ink); min-height: 44px; white-space: nowrap;
+}
+.menu-btn { height: 44px; display: grid; place-items: center; color: var(--ink); }
+.menu-btn[aria-expanded="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 8px); width: min(320px, 100%); z-index: 6;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, .22);
+}
+.stepno {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--ink); color: var(--bg); font-size: 19px; vertical-align: 3px; margin-right: 4px;
+}
+.plan.first { border-top: 0; padding-top: 0; }
+.rounds { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.rounds::-webkit-scrollbar { display: none; }
+.rchip {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--line); background: transparent;
+  font-family: var(--display); font-size: 20px; color: var(--muted);
+}
+.rchip.done { border-color: var(--gold); color: var(--gold); }
+.rchip[aria-current="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--accent-soft); border-radius: 10px; padding: 3px; }
+.seg button { border: 0; background: transparent; border-radius: 8px; padding: 9px; font-weight: 600; color: var(--muted); min-height: 40px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); }
+
+/* Carte joueur */
+.players { display: flex; flex-direction: column; gap: 10px; }
+.player { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.p-head { display: flex; align-items: center; gap: 10px; }
+.p-name { flex: 1; min-width: 0; font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
+.p-delta { font-weight: 700; font-size: 14px; }
+.p-total { font-family: var(--display); font-size: 28px; line-height: 1; min-width: 56px; text-align: right; }
+.p-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--line);
+  background: transparent; font-weight: 600; font-size: 17px;
+}
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.bonus-toggle {
+  border: 1px dashed var(--line); background: transparent; border-radius: 8px;
+  padding: 6px 10px; font-size: 14px; font-weight: 600; color: var(--muted); min-height: 36px;
+}
+.bonus-toggle.has { border-style: solid; border-color: var(--gold); color: var(--gold); }
+.bonus { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
+.b-row { display: flex; align-items: center; gap: 8px; }
+.b-label { flex: 1; min-width: 0; font-size: 15px; }
+.b-pts { color: var(--gold); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.step { display: flex; align-items: center; gap: 4px; }
+.step button { width: 38px; height: 38px; border-radius: 8px; border: 1px solid var(--line); background: transparent; font-size: 18px; font-weight: 600; }
+.step button:disabled { opacity: .35; cursor: default; }
+.step .v { width: 34px; text-align: center; font-weight: 700; }
+.b-note { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+
+.plan { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.plan .sub { margin: 0; font-size: 14px; }
+.presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.preset { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 4px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; }
+.preset b { font-size: 14px; }
+.preset small { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.preset[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+.plan-list { display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.plan-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.plan-btns .btn { flex: 1 1 160px; }
+.cards-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; color: var(--muted); }
+.status { display: flex; flex-direction: column; gap: 10px; }
+.status p { margin: 0; font-size: 15px; color: var(--muted); text-align: center; }
+.status p.warn { color: var(--gold); font-weight: 600; }
+
+/* Classement et tableau */
+.rank { display: flex; flex-direction: column; gap: 6px; }
+.rank-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.rank-row .pos-n { font-family: var(--display); font-size: 26px; width: 28px; color: var(--muted); line-height: 1; }
+.rank-row.lead .pos-n { color: var(--gold); }
+.rank-row .nm { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.rank-row .tt { font-family: var(--display); font-size: 28px; line-height: 1; }
+.section-title { font-size: 24px; margin-top: 6px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+thead th { font-weight: 600; color: var(--muted); }
+tbody tr:last-child td, tfoot td { border-bottom: 0; }
+tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
+td .bt { display: block; font-size: 12px; color: var(--muted); }
+td .cum { font-weight: 700; }
+.actions { display: flex; flex-direction: column; gap: 8px; }
+.rules { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+.rules summary { font-weight: 600; color: var(--ink); cursor: pointer; padding: 6px 0; }
+.rules ul { margin: 8px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+
+/* ----- Coque d'application : chaque écran tient dans la hauteur, seul le milieu défile si besoin ----- */
+html, body { height: 100%; }
+body { padding-block: 0; overflow: hidden; overscroll-behavior: none; }
+button { -webkit-user-select: none; user-select: none; }
+#app { max-width: 900px; height: 100%; display: block; }
+.screen, .setup { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; }
+.scroll > * { flex-shrink: 0; }
+.foot { position: static; margin-top: 0; padding-block: 4px 12px; display: grid; gap: 8px; }
+.foot p { margin: 0; font-size: 14px; color: var(--muted); text-align: center; }
+.foot p.warn { color: var(--gold); font-weight: 600; }
+.top { position: relative; top: auto; padding-block: 0 8px; gap: 8px; }
+.top-line { gap: 6px; }
+.top-line h1 { font-size: 32px; white-space: nowrap; }
+.title { flex: 0 1 auto; }
+.cards { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.spacer { flex: 1; }
+.icon-btn { display: grid; place-items: center; flex: 0 0 auto; width: 44px; height: 44px; color: var(--ink); padding: 0; }
+.icon-btn.nav { width: 38px; }
+.icon-btn:disabled { opacity: .3; }
+.icon-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 6px; }
+.prow { display: flex; align-items: center; gap: 8px; min-height: 56px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 5px 10px 5px 12px; }
+.p-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.p-name { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
+.p-sub { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.step.big button { width: 44px; height: 44px; font-size: 22px; border-radius: 10px; }
+.step.big .v { width: 34px; border: 0; font-size: 22px; font-weight: 700; color: var(--ink); }
+.p-total { font-size: 24px; min-width: 44px; }
+.bonus-btn { color: var(--muted); font-size: 13px; font-weight: 700; }
+.bonus-btn.has { border-color: var(--gold); color: var(--gold); }
+.sheet-back { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); z-index: 19; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; margin: 0 auto; max-width: 560px; max-height: 88%; overflow-y: auto;
+  background: var(--surface); border-radius: 18px 18px 0 0; border: 1px solid var(--line); border-bottom: 0;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheet-head h2 { font-size: 26px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet .bonus { border-top: 0; padding-top: 0; }
+</style>
+
+<div id="app"></div>
+
+<script>
+const KEY = 'skull-king-scores-v1';
+const MAX_CARDS = 10;
+const MAX_ROUNDS = 15;
+const classic = () => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const PRESETS = {
+  classic: { name: 'Classique',  detail: '1 à 10',        cards: classic() },
+  pairs:   { name: 'Paires',     detail: '2·4·6·8·10 ×2', cards: [2, 2, 4, 4, 6, 6, 8, 8, 10, 10] },
+  odds:    { name: 'Impaires',   detail: '1·3·5·7·9 ×2',  cards: [1, 1, 3, 3, 5, 5, 7, 7, 9, 9] },
+  short:   { name: 'Courte',     detail: '6 à 10',        cards: [6, 7, 8, 9, 10] },
+  fives:   { name: 'Que des 5',  detail: '10 manches',    cards: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5] },
+  tens:    { name: 'Que des 10', detail: '10 manches',    cards: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10] }
+};
+const MAX_PLAYERS = 8;
+const BONUS = [
+  { k: 'c14',  label: '14 de couleur',                 pts: 10, max: 3 },
+  { k: 'n14',  label: '14 noir',                       pts: 20, max: 1 },
+  { k: 'sir',  label: 'Sirène prise par un pirate',    pts: 20, max: 2 },
+  { k: 'pir',  label: 'Pirate pris par le Skull King', pts: 30, max: 6 },
+  { k: 'sk',   label: 'Skull King pris par une sirène', pts: 40, max: 1 },
+  { k: 'loot', label: 'Butin (alliance réussie)',      pts: 20, max: 2 }
+];
+
+/*score-start*/
+function bonusPts(cell) {
+  const b = cell.b || {};
+  let t = b.adj || 0;
+  for (const d of BONUS) t += (b[d.k] || 0) * d.pts;
+  return t;
+}
+// cards : nombre de cartes distribuées à la manche. Renvoie null tant que pari ou plis manquent.
+function scoreCell(cards, cell) {
+  if (cell.bid == null || cell.tr == null) return null;
+  if (cell.bid !== cell.tr) {
+    return cell.bid === 0 ? -10 * cards : -10 * Math.abs(cell.bid - cell.tr);
+  }
+  return (cell.bid === 0 ? 10 * cards : 20 * cell.bid) + bonusPts(cell);
+}
+/*score-end*/
+
+function emptyData(n) {
+  return Array.from({ length: S.cards.length }, () => Array.from({ length: n }, () => ({ bid: null, tr: null, b: {} })));
+}
+function fresh() {
+  return { stage: 'setup', names: ['', '', '', ''], cur: 0, phase: 'bid', view: 'round', cards: classic(), data: [] };
+}
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && Array.isArray(s.names) && Array.isArray(s.data)) {
+      if (!Array.isArray(s.cards) || !s.cards.length) s.cards = s.data.length ? s.data.map((_, i) => i + 1) : classic();
+      return s;
+    }
+  } catch (e) {}
+  return null;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+}
+
+let S = load() || fresh();
+let openBonus = -1;   // joueur dont le panneau bonus est ouvert
+let confirmKey = '';  // action en attente de confirmation
+let menuOpen = false;
+let selR = 0;        // manche sélectionnée dans le réglage des cartes
+let wakeLock = null;
+
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
+const cls = n => (n > 0 ? 'pos' : n < 0 ? 'neg' : '');
+const pname = i => S.names[i].trim() || 'Joueur ' + (i + 1);
+
+function totals(uptoRoundIdx) {
+  const last = uptoRoundIdx == null ? S.cards.length - 1 : uptoRoundIdx;
+  return S.names.map((_, p) => {
+    let t = 0;
+    for (let r = 0; r <= last; r++) t += scoreCell(S.cards[r], S.data[r][p]) || 0;
+    return t;
+  });
+}
+const roundDone = r => S.data[r].every(c => c.bid != null && c.tr != null);
+
+/* ---------- Rendu ---------- */
+function render() {
+  app.innerHTML = S.stage === 'setup' ? viewSetup()
+    : S.paused ? viewPause()
+    : `<div class="screen">${viewTop()}${S.view === 'board' ? viewBoard() : viewRound()}</div>`;
+}
+
+function setupHead(step, title) {
+  return `<div class="s-head">
+    <span class="s-step">Skull King · étape ${step} sur 2</span>
+    <h1>${title}</h1>
+  </div>`;
+}
+
+function viewSetup() { return S.step === 2 ? viewSetupCards() : viewSetupPlayers(); }
+
+function viewSetupPlayers() {
+  const rows = S.names.map((n, i) => `
+    <div class="name-row">
+      <span class="seat" aria-hidden="true">${i + 1}</span>
+      <input id="name-${i}" data-name="${i}" type="text" maxlength="14" autocomplete="off" autocapitalize="words"
+        placeholder="Joueur ${i + 1}" aria-label="Nom du joueur ${i + 1}" value="${esc(n)}">
+      ${S.names.length > 2 ? `<button class="icon-btn" data-act="rm" data-i="${i}" aria-label="Retirer le joueur ${i + 1}">×</button>` : ''}
+    </div>`).join('');
+  return `
+  <div class="setup">
+    ${setupHead(1, 'Joueurs')}
+    <div class="scroll">
+    <div class="names">${rows}</div>
+    ${S.names.length < MAX_PLAYERS ? `<button class="btn ghost" data-act="add">Ajouter un joueur</button>` : ''}
+    </div>
+    <div class="foot">
+      <button class="btn primary block" data-act="to2">Suivant : cartes à distribuer</button>
+    </div>
+  </div>`;
+}
+
+function viewSetupCards() {
+  const nR = S.cards.length;
+  if (selR >= nR) selR = nR - 1;
+  const same = S.cards.every(c => c === S.cards[0]);
+  const presets = Object.keys(PRESETS).map(k => `
+    <button class="preset" data-act="preset" data-k="${k}" aria-pressed="${PRESETS[k].cards.join() === S.cards.join()}">
+      <b>${PRESETS[k].name}</b><small>${PRESETS[k].detail}</small>
+    </button>`).join('');
+  const cells = S.cards.map((c, i) => `
+    <button class="rcell" data-act="selr" data-i="${i}" aria-pressed="${i === selR}" aria-label="Manche ${i + 1}, ${c} carte${c > 1 ? 's' : ''}">
+      <small>M${i + 1}</small><b class="num">${c}</b>
+    </button>`).join('');
+  const c = S.cards[selR];
+  const stepper = (act, v, lo, hi, extra, what) => `
+    <span class="step">
+      <button data-act="${act}" ${extra} data-d="-1" ${lo ? 'disabled' : ''} aria-label="Moins : ${what}">−</button>
+      <span class="v num">${v}</span>
+      <button data-act="${act}" ${extra} data-d="1" ${hi ? 'disabled' : ''} aria-label="Plus : ${what}">+</button>
+    </span>`;
+  return `
+  <div class="setup">
+    ${setupHead(2, 'Cartes à distribuer')}
+    <div class="scroll">
+    <div class="presets">${presets}</div>
+    <div class="plan-list">
+      <div class="b-row"><span class="b-label">Nombre de manches</span>${stepper('rcount', nR, nR <= 1, nR >= MAX_ROUNDS, '', 'nombre de manches')}</div>
+      <div class="b-row"><span class="b-label">Mêmes cartes partout</span>${stepper('call', same ? S.cards[0] : '·', same && S.cards[0] <= 1, same && S.cards[0] >= MAX_CARDS, '', 'cartes à toutes les manches')}</div>
+    </div>
+    <div class="rgrid">${cells}</div>
+    <div class="plan-list">
+      <div class="b-row"><span class="b-label">Cartes à la manche ${selR + 1}</span>${stepper('cstep', c, c <= 1, c >= MAX_CARDS, `data-i="${selR}"`, 'cartes à la manche ' + (selR + 1))}</div>
+    </div>
+    </div>
+    <div class="foot two">
+      <button class="btn" data-act="to1">Retour</button>
+      <button class="btn primary" data-act="start">Commencer la partie</button>
+    </div>
+  </div>`;
+}
+
+function rankHtml() {
+  const tot = totals();
+  const order = S.names.map((_, i) => i).sort((a, b) => tot[b] - tot[a]);
+  const best = tot[order[0]];
+  let rankNo = 0, prev = null;
+  return order.map((p, i) => {
+    if (tot[p] !== prev) { rankNo = i + 1; prev = tot[p]; }
+    return `<div class="rank-row ${tot[p] === best ? 'lead' : ''}">
+      <span class="pos-n num">${rankNo}</span><span class="nm">${esc(pname(p))}</span><span class="tt num">${tot[p]}</span>
+    </div>`;
+  }).join('');
+}
+
+function askBtn(key, label, sure) {
+  return confirmKey === key
+    ? `<button class="btn danger block" data-act="${key}">${sure}</button>`
+    : `<button class="btn block" data-act="ask" data-k="${key}">${label}</button>`;
+}
+
+function viewPause() {
+  const c = S.cards[S.cur];
+  return `
+  <div class="setup">
+    <div>
+      <h1>Partie en pause</h1>
+      <p class="sub">Manche ${S.cur + 1} sur ${S.cards.length}, ${c} carte${c > 1 ? 's' : ''}. Les scores sont enregistrés sur cet appareil.</p>
+    </div>
+    <div class="scroll"><div class="rank">${rankHtml()}</div></div>
+    <div class="foot">
+      <button class="btn primary block" data-act="resume">Reprendre la partie</button>
+      ${askBtn('reset', 'Arrêter la partie', 'Confirmer : arrêter et effacer les scores')}
+    </div>
+  </div>`;
+}
+
+function viewMenu() {
+  const c = S.cards[S.cur];
+  return `<div class="menu">
+    ${S.view === 'round' ? `<div class="b-row">
+      <span class="b-label">Cartes de cette manche</span>
+      <span class="step">
+        <button data-act="gstep" data-d="-1" ${c <= 1 ? 'disabled' : ''} aria-label="Une carte de moins">−</button>
+        <span class="v num">${c}</span>
+        <button data-act="gstep" data-d="1" ${c >= MAX_CARDS ? 'disabled' : ''} aria-label="Une carte de plus">+</button>
+      </span>
+    </div>` : ''}
+    <button class="btn block" data-act="pause">Mettre en pause</button>
+    ${askBtn('replay', 'Recommencer à zéro', 'Confirmer : effacer les scores')}
+    ${askBtn('reset', 'Arrêter la partie', 'Confirmer : arrêter et effacer les scores')}
+  </div>`;
+}
+
+const svg = d => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+const ICON = {
+  menu: svg('M4 7h16M4 12h16M4 17h16'),
+  rank: svg('M5 20v-6M12 20V5M19 20v-10'),
+  prev: svg('M15 5l-7 7 7 7'),
+  next: svg('M9 5l7 7-7 7'),
+  star: svg('M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z')
+};
+
+function viewTop() {
+  const r = S.cur, n = r + 1, nR = S.cards.length, c = S.cards[r];
+  const board = S.view === 'board';
+  return `
+  <div class="top">
+    <div class="top-line">
+      ${board ? '' : `<button class="icon-btn nav" data-act="round" data-i="${r - 1}" ${r <= 0 ? 'disabled' : ''} aria-label="Manche précédente">${ICON.prev}</button>`}
+      <div class="title">
+        <h1>${board ? 'Classement' : 'Manche ' + n}</h1>
+        <span class="cards num">${board ? `Manche ${n} sur ${nR}` : `${n} sur ${nR} · ${c} carte${c > 1 ? 's' : ''}`}</span>
+      </div>
+      ${board ? '' : `<button class="icon-btn nav" data-act="round" data-i="${r + 1}" ${r >= nR - 1 ? 'disabled' : ''} aria-label="Manche suivante">${ICON.next}</button>`}
+      <span class="spacer"></span>
+      <button class="icon-btn" data-act="view" data-v="${board ? 'round' : 'board'}" aria-pressed="${board}" aria-label="${board ? 'Revenir à la manche' : 'Voir le classement'}">${ICON.rank}</button>
+      <button class="icon-btn menu-btn" data-act="menu" aria-expanded="${menuOpen}" aria-label="Menu de la partie">${ICON.menu}</button>
+      ${menuOpen ? viewMenu() : ''}
+    </div>
+    ${board ? '' : `
+    <div class="seg">
+      <button data-act="phase" data-v="bid" aria-pressed="${S.phase === 'bid'}">1. Paris</button>
+      <button data-act="phase" data-v="tr" aria-pressed="${S.phase === 'tr'}">2. Plis gagnés</button>
+    </div>`}
+  </div>`;
+}
+
+function viewRound() {
+  const r = S.cur, n = S.cards[r], row = S.data[r];
+  const tot = totals();
+  const field = S.phase;
+  const what = field === 'bid' ? 'pari' : 'plis gagnés';
+  const rows = row.map((c, p) => {
+    const sc = scoreCell(n, c), v = c[field], bp = bonusPts(c), nm = esc(pname(p));
+    const sub = field === 'tr'
+      ? `Pari ${c.bid == null ? '?' : c.bid}${sc != null ? ` · <b class="${cls(sc)}">${signed(sc)}</b>` : ''}`
+      : (sc != null ? `<b class="${cls(sc)}">${signed(sc)}</b>` : '');
+    return `
+    <section class="prow">
+      <div class="p-id">
+        <span class="p-name">${nm}</span>
+        ${sub ? `<span class="p-sub num">${sub}</span>` : ''}
+      </div>
+      ${field === 'tr' ? `<button class="icon-btn bonus-btn ${bp ? 'has' : ''}" data-act="bonus" data-p="${p}" aria-label="Bonus de ${nm}">${bp ? `<span class="num">${signed(bp)}</span>` : ICON.star}</button>` : ''}
+      <span class="step big">
+        <button data-act="pstep" data-p="${p}" data-d="-1" ${v != null && v <= 0 ? 'disabled' : ''} aria-label="Moins : ${what} de ${nm}">−</button>
+        <button class="v num" data-act="pclear" data-p="${p}" aria-label="${what} de ${nm} : ${v == null ? 'non saisi' : v}. Toucher pour effacer.">${v == null ? '·' : v}</button>
+        <button data-act="pstep" data-p="${p}" data-d="1" ${v != null && v >= n ? 'disabled' : ''} aria-label="Plus : ${what} de ${nm}">+</button>
+      </span>
+      <span class="p-total num">${tot[p]}</span>
+    </section>`;
+  }).join('');
+
+  let status;
+  if (field === 'bid') {
+    const set = row.filter(c => c.bid != null).length;
+    const sum = row.reduce((a, c) => a + (c.bid || 0), 0);
+    status = `<p class="num">${set < row.length ? `${set} pari${set > 1 ? 's' : ''} noté${set > 1 ? 's' : ''} sur ${row.length}` : `Total des paris : ${sum} pour ${n} pli${n > 1 ? 's' : ''}`}</p>
+      <button class="btn primary block" data-act="phase" data-v="tr">Noter les plis gagnés</button>`;
+  } else {
+    const sum = row.reduce((a, c) => a + (c.tr || 0), 0);
+    const over = sum > n;
+    status = `<p class="num ${over ? 'warn' : ''}">${over ? `${sum} plis notés pour ${n} carte${n > 1 ? 's' : ''} : à vérifier` : `Plis attribués : ${sum} sur ${n}`}</p>
+      ${r < S.cards.length - 1
+        ? `<button class="btn primary block" data-act="next">Manche suivante</button>`
+        : `<button class="btn primary block" data-act="view" data-v="board">Voir le classement final</button>`}`;
+  }
+  const sheet = field === 'tr' && openBonus >= 0 && row[openBonus] ? `
+    <div class="sheet-back" data-act="bonus" data-p="${openBonus}"></div>
+    <div class="sheet" role="dialog" aria-label="Bonus de ${esc(pname(openBonus))}">
+      <div class="sheet-head">
+        <h2>Bonus de ${esc(pname(openBonus))}</h2>
+        <button class="btn" data-act="bonus" data-p="${openBonus}">Terminé</button>
+      </div>
+      ${bonusPanel(openBonus, row[openBonus])}
+    </div>` : '';
+  return `<div class="scroll"><div class="players">${rows}</div></div><div class="foot">${status}</div>${sheet}`;
+}
+
+function bonusPanel(p, c) {
+  const b = c.b || {};
+  const rows = BONUS.map(d => {
+    const v = b[d.k] || 0;
+    return `<div class="b-row">
+      <span class="b-label">${d.label} <span class="b-pts num">+${d.pts}</span></span>
+      <span class="step">
+        <button data-act="bstep" data-p="${p}" data-k="${d.k}" data-d="-1" ${v <= 0 ? 'disabled' : ''} aria-label="Retirer : ${d.label}">−</button>
+        <span class="v num">${v}</span>
+        <button data-act="bstep" data-p="${p}" data-k="${d.k}" data-d="1" ${v >= d.max ? 'disabled' : ''} aria-label="Ajouter : ${d.label}">+</button>
+      </span>
+    </div>`;
+  }).join('');
+  const adj = b.adj || 0;
+  const missed = c.bid != null && c.tr != null && c.bid !== c.tr;
+  return `<div class="bonus">
+    ${rows}
+    <div class="b-row">
+      <span class="b-label">Autre ajustement <span class="b-pts">par 10</span></span>
+      <span class="step">
+        <button data-act="bstep" data-p="${p}" data-k="adj" data-d="-10" aria-label="Retirer 10 points">−</button>
+        <span class="v num">${signed(adj)}</span>
+        <button data-act="bstep" data-p="${p}" data-k="adj" data-d="10" aria-label="Ajouter 10 points">+</button>
+      </span>
+    </div>
+    <p class="b-note">${missed ? 'Pari raté : les bonus ne sont pas comptés.' : 'Les bonus ne comptent que si le pari est réussi.'}</p>
+  </div>`;
+}
+
+function viewBoard() {
+  const tot = totals();
+  const rank = rankHtml();
+
+  const cum = S.names.map(() => 0);
+  const body = S.data.map((row, r) => {
+    const cells = row.map((c, p) => {
+      const sc = scoreCell(S.cards[r], c);
+      if (sc == null) return `<td class="muted">${c.bid != null ? `<span class="bt num">pari ${c.bid}</span>` : ''}·</td>`;
+      cum[p] += sc;
+      return `<td class="num"><span class="bt">${c.tr}/${c.bid} · <span class="${cls(sc)}">${signed(sc)}</span></span><span class="cum">${cum[p]}</span></td>`;
+    }).join('');
+    return `<tr><td class="num">${r + 1}<span class="bt">${S.cards[r]} carte${S.cards[r] > 1 ? 's' : ''}</span></td>${cells}</tr>`;
+  }).join('');
+
+
+  return `<div class="scroll">
+  <div class="rank">${rank}</div>
+  <h2 class="section-title">Détail des manches</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Manche</th>${S.names.map((_, p) => `<th>${esc(pname(p))}</th>`).join('')}</tr></thead>
+      <tbody>${body}</tbody>
+      <tfoot><tr><td>Total</td>${tot.map(t => `<td class="num">${t}</td>`).join('')}</tr></tfoot>
+    </table>
+  </div>
+  <p class="muted" style="margin:0;font-size:13px">Dans chaque case : plis gagnés / pari, points de la manche, puis cumul.</p>
+  <details class="rules">
+    <summary>Rappel du calcul des points</summary>
+    <ul>
+      <li>Pari réussi : 20 points par pli parié.</li>
+      <li>Pari raté : −10 points par pli d'écart.</li>
+      <li>Pari de zéro réussi : 10 points × le nombre de cartes de la manche. Raté : la même somme en négatif.</li>
+      <li>Bonus, seulement si le pari est réussi : 14 de couleur +10, 14 noir +20, sirène prise par un pirate +20, pirate pris par le Skull King +30, Skull King pris par une sirène +40, butin +20.</li>
+    </ul>
+  </details>
+  </div>`;
+}
+
+/* ---------- Actions ---------- */
+app.addEventListener('input', e => {
+  const i = e.target.dataset.name;
+  if (i != null) { S.names[+i] = e.target.value; save(); }
+});
+
+app.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) {
+    if (menuOpen && !e.target.closest('.menu')) { menuOpen = false; confirmKey = ''; render(); }
+    return;
+  }
+  const d = el.dataset, act = d.act;
+  if (act !== 'replay' && act !== 'reset' && act !== 'ask') confirmKey = '';
+  let scrollTop = false;
+  if (act === 'menu') menuOpen = !menuOpen;
+  else if (act !== 'gstep' && act !== 'ask') menuOpen = false;
+
+  if (act === 'add') { S.names.push(''); }
+  else if (act === 'rm') { S.names.splice(+d.i, 1); }
+  else if (act === 'to2') { S.step = 2; selR = 0; scrollTop = true; }
+  else if (act === 'to1') { S.step = 1; scrollTop = true; }
+  else if (act === 'selr') { selR = +d.i; }
+  else if (act === 'preset') { S.cards = PRESETS[d.k].cards.slice(); }
+  else if (act === 'cstep') { S.cards[+d.i] = Math.max(1, Math.min(MAX_CARDS, S.cards[+d.i] + +d.d)); }
+  else if (act === 'rcount') {
+    if (+d.d > 0 && S.cards.length < MAX_ROUNDS) {
+      const last = S.cards[S.cards.length - 1];
+      S.cards.push(S.cards.every(c => c === last) ? last : Math.min(MAX_CARDS, last + 1));
+    } else if (+d.d < 0 && S.cards.length > 1) S.cards.pop();
+  }
+  else if (act === 'call') {
+    const same = S.cards.every(c => c === S.cards[0]);
+    const v = same ? Math.max(1, Math.min(MAX_CARDS, S.cards[0] + +d.d)) : 5;
+    S.cards = S.cards.map(() => v);
+  }
+  else if (act === 'pause') { S.paused = true; scrollTop = true; if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; } }
+  else if (act === 'resume') { S.paused = false; scrollTop = true; keepAwake(); }
+  else if (act === 'gstep') {
+    const c = Math.max(1, Math.min(MAX_CARDS, S.cards[S.cur] + +d.d));
+    S.cards[S.cur] = c;
+    for (const x of S.data[S.cur]) { if (x.bid > c) x.bid = null; if (x.tr > c) x.tr = null; }
+  }
+  else if (act === 'start') {
+    S.data = emptyData(S.names.length);
+    S.stage = 'game'; S.cur = 0; S.phase = 'bid'; S.view = 'round'; scrollTop = true;
+    keepAwake();
+  }
+  else if (act === 'view') { S.view = d.v; openBonus = -1; scrollTop = true; }
+  else if (act === 'round') {
+    S.cur = Math.max(0, Math.min(S.cards.length - 1, +d.i)); openBonus = -1;
+    S.phase = S.data[S.cur].every(c => c.bid != null) && !roundDone(S.cur) ? 'tr' : 'bid';
+  }
+  else if (act === 'phase') { S.phase = d.v; openBonus = -1; scrollTop = true; }
+  else if (act === 'pstep') {
+    const c = S.data[S.cur][+d.p], v = c[S.phase];
+    c[S.phase] = v == null ? 0 : Math.max(0, Math.min(S.cards[S.cur], v + +d.d));
+  }
+  else if (act === 'pclear') { S.data[S.cur][+d.p][S.phase] = null; }
+  else if (act === 'pick') {
+    const c = S.data[S.cur][+d.p], v = +d.v;
+    c[S.phase] = c[S.phase] === v ? null : v;
+  }
+  else if (act === 'bonus') { openBonus = openBonus === +d.p ? -1 : +d.p; }
+  else if (act === 'bstep') {
+    const c = S.data[S.cur][+d.p];
+    c.b = c.b || {};
+    const def = BONUS.find(x => x.k === d.k);
+    let v = (c.b[d.k] || 0) + +d.d;
+    v = def ? Math.max(0, Math.min(def.max, v)) : Math.max(-200, Math.min(200, v));
+    if (v) c.b[d.k] = v; else delete c.b[d.k];
+  }
+  else if (act === 'next') {
+    if (S.cur < S.cards.length - 1) { S.cur++; S.phase = 'bid'; openBonus = -1; scrollTop = true; }
+  }
+  else if (act === 'ask') { confirmKey = d.k; }
+  else if (act === 'replay') {
+    S.data = emptyData(S.names.length);
+    S.cur = 0; S.phase = 'bid'; S.view = 'round'; S.paused = false; confirmKey = ''; scrollTop = true;
+  }
+  else if (act === 'reset') {
+    const names = S.names, cards = S.cards; S = fresh(); S.names = names; S.cards = cards; confirmKey = ''; scrollTop = true;
+  }
+
+  save();
+  render();
+  if (scrollTop) window.scrollTo(0, 0);
+  const cur = document.querySelector('.rchip[aria-current="true"]');
+  if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
+});
+
+/* Garde l'écran allumé pendant la partie, quand le navigateur l'autorise. */
+function keepAwake() {
+  try {
+    if (navigator.wakeLock && !S.paused && document.visibilityState === 'visible') navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => {});
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (S.stage === 'game') keepAwake(); });
+document.addEventListener('click', () => { if (S.stage === 'game') keepAwake(); }, { once: true });
+
+render();
+</script>
