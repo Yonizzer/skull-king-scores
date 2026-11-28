@@ -19,17 +19,13 @@ body { font-family: Georgia, "Times New Roman", serif; color: #000; -webkit-prin
 .corner { background: #111; color: #fff; display: grid; place-items: center; font-size: 11pt; font-weight: bold; letter-spacing: .05em; }
 .rn { display: flex; flex-direction: column; align-items: center; padding-top: 0.7mm; font-size: 10pt; line-height: 1; }
 .rn::after { content: ""; width: 8mm; border-top: 0.25mm solid #000; margin-top: 0.4mm; }
-.cell { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 46% 2.1mm 1fr; }
-.bid { grid-area: 1 / 1; position: relative; border-right: 0.45mm solid #000; }
+.cell { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.bid { grid-area: 1 / 1; position: relative; border-right: 0.45mm solid #000; border-bottom: 0.45mm solid #000; }
 .bid svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.marks { grid-area: 2 / 1; display: grid; grid-template-columns: 1fr 1fr; border-top: 0.45mm solid #000; border-bottom: 0.45mm solid #000; border-right: 0.45mm solid #000; }
-.marks i { display: grid; place-items: center; }
-.marks i + i { border-left: 0.45mm solid #000; }
-.marks svg { width: 1.5mm; height: 1.5mm; }
-.shade { grid-area: 3 / 1; background: #d9d9d9; border-right: 0.4mm dashed #000; }
-.pts { grid-area: 1 / 2 / 3 / 3; border-right: 0.45mm solid #000; border-bottom: 0.4mm dashed #000; margin-bottom: 1.05mm; }
-.bon { grid-area: 1 / 3 / 3 / 4; border-bottom: 0.4mm dashed #000; margin-bottom: 1.05mm; }
-.tot { grid-area: 2 / 2 / 4 / 4; margin-top: 1.05mm; }
+.shade { grid-area: 2 / 1; background: #d9d9d9; border-right: 0.4mm dashed #000; }
+.pts { grid-area: 1 / 2; border-right: 0.45mm solid #000; border-bottom: 0.4mm dashed #000; }
+.bon { grid-area: 1 / 3; border-bottom: 0.4mm dashed #000; }
+.tot { grid-area: 2 / 2 / 3 / 4; }
 </style>
 </head>
 <body>
@@ -37,11 +33,7 @@ body { font-family: Georgia, "Times New Roman", serif; color: #000; -webkit-prin
 <script>
 function sheet() {
   const diag = '<svg viewBox="0 0 10 10" preserveAspectRatio="none"><line x1="0" y1="10" x2="10" y2="0" stroke="#000" stroke-width="0.45mm" vector-effect="non-scaling-stroke"/></svg>';
-  const dot = '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.6"/></svg>';
-  let fl = '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="1.3"/>';
-  for (let k = 0; k < 6; k++) fl += '<circle cx="' + (5 + 3.1 * Math.cos(k * Math.PI / 3)).toFixed(2) + '" cy="' + (5 + 3.1 * Math.sin(k * Math.PI / 3)).toFixed(2) + '" r="1.3"/>';
-  fl += '</svg>';
-  const cell = '<div class="cell"><div class="bid">' + diag + '</div><div class="marks"><i>' + dot + '</i><i>' + fl + '</i></div><div class="shade"></div><div class="pts"></div><div class="bon"></div><div class="tot"></div></div>';
+  const cell = '<div class="cell"><div class="bid">' + diag + '</div><div class="shade"></div><div class="pts"></div><div class="bon"></div><div class="tot"></div></div>';
   let g = '<div class="corner">SK</div><div></div><div></div><div></div><div></div>';
   for (let r = 1; r <= 10; r++) g += '<div class="rn">' + r + '</div>' + cell.repeat(4);
   return '<div class="sheet"><div class="grid">' + g + '</div></div>';
